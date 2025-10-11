@@ -1,0 +1,217 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: mirea-postgres
+    environment:
+      POSTGRES_DB: mirea_db
+      POSTGRES_USER: mirea_user
+      POSTGRES_PASSWORD: mirea_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - monitoring-network
+
+  adminer:
+    image: adminer:4.8.1
+    container_name: mirea-adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - monitoring-network
+
+  spring-app:
+    build: .
+    container_name: mirea-spring-app
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: mirea_db
+      DB_USERNAME: mirea_user
+      DB_PASSWORD: mirea_password
+      GRAYLOG_HOST: graylog
+      GRAYLOG_PORT: 12201
+    ports:
+      - "8090:8080"
+    depends_on:
+      - postgres
+      - graylog
+    networks:
+      - monitoring-network
+    volumes:
+      - ./logs:/var/log
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mirea-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - monitoring-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mirea-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring-network
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: mirea-postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://mirea_user:mirea_password@postgres:5432/mirea_db?sslmode=disable"
+    ports:
+      - "9187:9187"
+    depends_on:
+      - postgres
+    networks:
+      - monitoring-network
+
+  mongodb:
+    image: mongo:6.0
+    container_name: mirea-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - monitoring-network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+    container_name: mirea-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - monitoring-network
+
+  graylog:
+    image: graylog/graylog:5.0
+    container_name: mirea-graylog
+    environment:
+      GRAYLOG_PASSWORD_SECRET: somepasswordpepper
+      GRAYLOG_ROOT_PASSWORD_SHA2: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+      GRAYLOG_HTTP_EXTERNAL_URI: http://127.0.0.1:9000/
+      GRAYLOG_ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      GRAYLOG_MONGODB_URI: mongodb://admin:password@mongodb:27017/graylog?authSource=admin
+    entrypoint: /usr/bin/tini -- wait-for-it elasticsearch:9200 --  /docker-entrypoint.sh
+    depends_on:
+      - mongodb
+      - elasticsearch
+    ports:
+      - "9000:9000"
+      - "1514:1514"
+      - "1514:1514/udp"
+      - "12201:12201"
+      - "12201:12201/udp"
+    volumes:
+      - graylog_data:/usr/share/graylog/data
+    networks:
+      - monitoring-network
+
+  zabbix-postgres:
+    image: postgres:15
+    container_name: mirea-zabbix-postgres
+    environment:
+      POSTGRES_DB: zabbix
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: zabbix_password
+    volumes:
+      - zabbix_postgres_data:/var/lib/postgresql/data
+    networks:
+      - monitoring-network
+
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:alpine-6.0-latest
+    container_name: mirea-zabbix-server
+    environment:
+      DB_SERVER_HOST: zabbix-postgres
+      POSTGRES_DB: zabbix
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: zabbix_password
+    ports:
+      - "10051:10051"
+    depends_on:
+      - zabbix-postgres
+    volumes:
+      - zabbix_server_data:/var/lib/zabbix
+    networks:
+      - monitoring-network
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-6.0-latest
+    container_name: mirea-zabbix-web
+    environment:
+      ZBX_SERVER_HOST: zabbix-server
+      DB_SERVER_HOST: zabbix-postgres
+      POSTGRES_DB: zabbix
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: zabbix_password
+    ports:
+      - "8081:8080"
+    depends_on:
+      - zabbix-server
+      - zabbix-postgres
+    networks:
+      - monitoring-network
+
+  zabbix-agent:
+    image: zabbix/zabbix-agent:alpine-6.0-latest
+    container_name: mirea-zabbix-agent
+    environment:
+      ZBX_HOSTNAME: spring-app
+      ZBX_SERVER_HOST: zabbix-server
+      ZBX_SERVER_PORT: 10051
+      ZBX_PASSIVE_ALLOW: "true"
+      ZBX_ACTIVE_ALLOW: "true"
+    ports:
+      - "10050:10050"
+    depends_on:
+      - zabbix-server
+    networks:
+      - monitoring-network
+    privileged: true
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:
+  mongodb_data:
+  elasticsearch_data:
+  graylog_data:
+  zabbix_postgres_data:
+  zabbix_server_data:
+
+networks:
+  monitoring-network:
+    driver: bridge

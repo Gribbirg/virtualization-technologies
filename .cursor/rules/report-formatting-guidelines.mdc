@@ -1,0 +1,183 @@
+---
+alwaysApply: false
+---
+# Report Formatting Guidelines
+
+This document contains the formatting standards for practical assignment reports in the MDM course.
+
+## Report Content Rules
+
+### 1. Include Only What's Required
+- **Only include deliverables explicitly mentioned in the assignment**
+- Do not add supplementary materials, explanations, or background information
+- Follow the exact structure specified in task requirements
+- Avoid editorial commentary or personal interpretations
+
+### 2. Report Location
+- Place final reports in `prN/report/` directory
+- Use consistent naming: `PRN_Summary.md` or similar
+- Export final versions to Word/PDF as required
+
+## Word Document Formatting Standards
+
+### Available Styles
+The following styles are defined and available in Word documents for this project:
+
+#### Built-in Word Styles (Document Structure)
+
+1. **Heading 1** - Primary document headings
+   - Usage: Main chapter titles like "Введение", "Анализ предметной области"
+   - Example: Apply to top-level sections in academic reports (without manual numbering)
+
+2. **Heading 2** - Secondary headings
+   - Usage: Major subsections within chapters like "Описание системы", "Функциональные требования"
+   - Example: Use for main subdivisions of chapters (without manual numbering)
+
+3. **Heading 3** - Third-level headings
+   - Usage: Detailed subsections like "Основной поток", "Спецификация"
+   - Example: Apply to use case flow descriptions, detailed specifications (without manual numbering)
+
+4. **TOCHeading** - Table of contents heading
+   - Usage: The main "СОДЕРЖАНИЕ" heading on contents page
+   - Example: Apply only to the primary contents page title
+
+5. **Normal** - Regular document text
+   - Usage: Standard paragraph text, descriptions, explanations
+   - Example: Apply to body text, definitions, explanatory content
+
+#### Custom Project Styles
+
+6. **"Content"** - Table of contents entries
+   - Usage: Individual entries in the table of contents with dot leaders
+   - Example: Apply to chapter and section listings in TOC
+
+7. **"TOCHeading"** - Table of contents heading
+   - Usage: The main "СОДЕРЖАНИЕ" heading word only
+   - Example: Apply only to the word "СОДЕРЖАНИЕ" at the top of contents page
+
+8. **"Picture name"** - Figure captions
+   - Usage: Captions for UML diagrams, architecture drawings, screenshots
+   - Note: Auto-prefix "Рисунок X. " is added automatically by Word
+   - Example: Apply to "Диаграмма вариантов использования системы MDM" (without "Рисунок 1. ")
+
+9. **"Picture"** - Diagram/image formatting
+   - Usage: Container formatting for embedded diagrams and technical illustrations
+   - Example: Apply to PlantUML diagrams, UML use case diagrams
+
+10. **"Table name"** - Table captions
+    - Usage: Captions above tables, matrix headers
+    - Note: Auto-prefix "Таблица X. " is added automatically by Word
+    - Example: Apply to "Матрица трассировки требований" (without "Таблица 1. ")
+
+11. **"Table"** - Table cell content
+    - Usage: Text inside table cells, data rows, specification tables
+    - Example: Apply to requirement descriptions, stakeholder information, traceability matrix entries
+
+12. **"Listing"** - Code listing captions
+    - Usage: Captions for code examples or configuration snippets
+    - Note: Auto-prefix "Листинг X. " is added automatically by Word
+    - Example: Apply to "Конфигурация API endpoint" (without "Листинг 1. ")
+
+13. **"Code"** - Code block formatting
+    - Usage: Code blocks, JSON configurations, API examples
+    - Example: Apply to entire code blocks with syntax highlighting
+
+## Document Structure and Formatting Rules
+
+### Heading Hierarchy Rules
+- **Heading 1**: MANDATORY for all main document sections ("Содержание", "Введение", "Постановка задачи", "Задание 1", etc.)
+- **Heading 2-3**: Use for subsections and document navigation hierarchy
+- **No Manual Numbering**: Headings should contain only titles without numbers (e.g., "Задание 1" not "1. Задание 1")
+- **Heading 4**: FORBIDDEN - Do not use fourth-level headings in any document
+- **Document Separators**: FORBIDDEN - Do not use horizontal rules (---) or similar separators
+
+### Caption Rules and Style Application
+**MANDATORY**: All visual elements MUST have properly styled captions with correct positioning:
+
+#### Figure Captions (diagrams, screenshots, illustrations)
+- **Style**: "Picture name" - MUST be applied in Word
+- **Position**: AFTER the figure/diagram
+- **Content**: ONLY the description text (e.g., "Диаграмма вариантов использования системы MDM")
+- **Note**: Word automatically adds "Рисунок X. " prefix to the caption
+
+#### Figure Content
+- **Style**: "Picture" - Apply to the actual diagram/image container
+- **Usage**: For PlantUML code blocks and embedded diagrams
+
+#### Table Captions
+- **Style**: "Table name" - MUST be applied in Word
+- **Position**: BEFORE the table (above)
+- **Content**: ONLY the description text (e.g., "Матрица трассировки акторов, прецедентов и NFR")
+- **Note**: Word automatically adds "Таблица X. " prefix to the caption
+
+#### Table Content
+- **Style**: "Table" - Apply to table cell content
+- **Usage**: All text inside table cells and data rows
+
+#### Code Listing Captions
+- **Style**: "Listing" - MUST be applied in Word
+- **Position**: BEFORE the code block (above)
+- **Content**: ONLY the description text (e.g., "Формат JSON ответа для получения мастер-записи")
+- **Note**: Word automatically adds "Листинг X. " prefix to the caption
+
+#### Code Content
+- **Style**: "Code" - Apply to code blocks
+- **Usage**: All code examples, JSON configurations, API samples
+
+#### Table of Contents
+- **Style**: "Content word" - Apply ONLY to the word "СОДЕРЖАНИЕ"
+- **Style**: "Content" - Apply to TOC entries with dot leaders
+
+### Content Formatting Requirements
+- **Lists**: Use Normal style for list content and regular text
+- **Table Formatting**: All tables MUST have visible borders and proper cell formatting using Style "Table"
+- **Diagram Formatting**: Apply Style "Picture" to diagram containers
+- **Code Formatting**: Use Style "Code" for code blocks and inline code elements
+- **Text Formatting**: FORBIDDEN - Do not use any manual text formatting in documents:
+  - NO bold (**bold**) formatting
+  - NO italic (*italic*) formatting
+  - NO underline formatting
+  - NO strikethrough formatting
+  - NO manual font changes or highlighting
+  - Exception: Bold formatting is allowed ONLY in structured sections like stakeholder names, technical terms definitions, or section headers within specifications
+  - All emphasis and formatting should be achieved through proper Word styles, not markdown formatting
+
+- **Markdown Syntax**: FORBIDDEN - Do not use standard markdown syntax in final reports:
+  - NO markdown headings (#, ##, ###, ####) - use Pandoc div styles instead
+  - NO markdown code blocks (```) - use Pandoc div with custom-style="Code"
+  - NO markdown inline code (`code`) - use Pandoc spans or Word styles
+  - NO markdown lists (-, *, 1.) - use Pandoc div with custom-style="Normal"
+  - NO markdown tables (| | |) - use proper table markup with custom-style="Table"
+  - All formatting must use Pandoc div syntax: `::: {custom-style="StyleName"}`
+
+## Document Conversion Process
+
+### MANDATORY Pandoc Workflow
+All final Word documents MUST be generated using Pandoc with the reference style document:
+
+1. **Style Source**: Always use `common/style_source.docx` as the reference document
+   - This file contains all approved Word styles for the project
+   - Never create Word documents manually - always convert from Markdown
+
+2. **Conversion Command**:
+   ```bash
+   pandoc document.md -o output.docx --reference-doc=common/style_source.docx
+   ```
+
+3. **Markdown Requirements**:
+   - Use proper Pandoc div syntax: `::: {custom-style="StyleName"}`
+   - Apply correct custom styles as defined in the style guide above
+   - Ensure all elements have appropriate style assignments
+
+4. **Style Verification**: After conversion, verify in Word that:
+   - All captions use correct styles (Picture name, Table name, Listing)
+   - Auto-numbering is working correctly
+   - Tables have proper borders and cell formatting
+
+## Quality Control
+
+- **Style Enforcement**: Captions without proper Word styles will be considered formatting errors
+- **Sequential Numbering**: Maintain consistent numbering across all figures, tables, and listings
+- **No Orphaned Elements**: Every visual element (figure/table/code) MUST have a caption
+- **Consistency**: Ensure uniform application of styles throughout the document
+- **Pandoc Compliance**: All Word documents must be generated via Pandoc with reference styles

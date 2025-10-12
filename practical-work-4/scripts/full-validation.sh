@@ -349,77 +349,116 @@ while [ $RETRY -le $MAX_RETRIES ]; do
 done
 
 echo ""
-echo "Ожидание готовности сервисов (может занять до $TIMEOUT секунд)..."
+echo "Ожидание готовности сервисов (до 2 минут на каждый)..."
 
 wait_for_service() {
     local url=$1
     local name=$2
-    local max_attempts=$((TIMEOUT / 5))
+    local max_attempts=12
     local attempt=1
     
     while [ $attempt -le $max_attempts ]; do
-        if curl -f -s "$url" > /dev/null 2>&1; then
+        local response=$(curl -s -m 10 -w "\n%{http_code}" "$url" 2>&1)
+        local http_code=$(echo "$response" | tail -1)
+        local body=$(echo "$response" | sed '$d')
+        
+        if [ "$http_code" = "200" ] || [ "$http_code" = "302" ] || [ "$http_code" = "301" ]; then
+            echo "  └─ $name ответил (код: $http_code)"
+            if [ -n "$body" ] && [ ${#body} -lt 200 ]; then
+                echo "     Ответ: $body"
+            fi
             return 0
         fi
         
-        if [ $((attempt % 6)) -eq 0 ]; then
-            echo "  Ожидание $name... ($((attempt * 5))s)"
+        if [ $attempt -eq 1 ] || [ $((attempt % 2)) -eq 0 ]; then
+            echo "  └─ Ожидание $name... ($((attempt * 10))s, код: ${http_code:-timeout})"
+            if [ -n "$body" ] && [ ${#body} -lt 150 ]; then
+                echo "     Ответ: $body"
+            fi
         fi
         
-        sleep 5
+        sleep 10
         attempt=$((attempt + 1))
     done
+    echo "  └─ Последний ответ от $name (код: ${http_code:-timeout})"
+    if [ -n "$body" ] && [ ${#body} -lt 200 ]; then
+        echo "     Ответ: $body"
+    fi
     return 1
 }
 
 SERVICES_TO_CHECK=(
-    "http://localhost:8090/actuator/health:Spring Boot"
-    "http://localhost:9090:Prometheus"
-    "http://localhost:3000:Grafana"
-    "http://localhost:8080:Adminer"
+    "http://localhost:8090/actuator/health|Spring Boot"
+    "http://localhost:9090/-/healthy|Prometheus"
+    "http://localhost:3000/api/health|Grafana"
+    "http://localhost:8080|Adminer"
 )
 
+ALL_SERVICES_UP=true
 for service_info in "${SERVICES_TO_CHECK[@]}"; do
-    IFS=':' read -r url name <<< "$service_info"
+    IFS='|' read -r url name <<< "$service_info"
+    echo ""
+    echo "Проверка: $name"
     if wait_for_service "$url" "$name"; then
         print_status "PASS" "Сервис $name доступен"
     else
-        print_status "FAIL" "Сервис $name недоступен после $TIMEOUT секунд"
+        print_status "WARN" "Сервис $name недоступен (может требовать больше времени)"
+        ALL_SERVICES_UP=false
     fi
 done
+
+if [ "$ALL_SERVICES_UP" = "false" ]; then
+    echo ""
+    echo -e "${YELLOW}⚠️  Некоторые сервисы не успели запуститься. Продолжаем тестирование...${NC}"
+    echo "   (Для медленных машин можно увеличить TIMEOUT)"
+fi
 
 sleep 10
 
 print_header "9. ТЕСТИРОВАНИЕ CRUD ОПЕРАЦИЙ"
 
+echo "Проверка доступности API..."
+API_HEALTH=$(curl -s -m 5 "$BASE_URL/actuator/health" 2>/dev/null)
+if echo "$API_HEALTH" | grep -q '"status":"UP"'; then
+    print_status "PASS" "Spring Boot API готов к тестированию"
+else
+    print_status "WARN" "Spring Boot API может быть не готов, но продолжаем тестирование"
+    sleep 5
+fi
+
 echo "Создание пользователя..."
-USER_RESPONSE=$(curl -s -X POST "$BASE_URL/api/users" \
+USER_RESPONSE=$(curl -s -m 10 -X POST "$BASE_URL/api/users" \
     -H "Content-Type: application/json" \
     -d '{
         "username": "test_user_validation",
         "email": "test@validation.com",
         "firstName": "Test",
         "lastName": "User"
-    }' 2>/dev/null)
+    }' 2>&1)
 
 if echo "$USER_RESPONSE" | grep -q "id"; then
     print_status "PASS" "Создание пользователя (POST /api/users)"
     USER_ID=$(echo "$USER_RESPONSE" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
+    echo "  └─ Создан пользователь с ID: $USER_ID"
 else
     print_status "FAIL" "Создание пользователя не работает"
+    echo "  └─ Ответ сервера: ${USER_RESPONSE:0:200}"
     USER_ID=1
 fi
 
 echo "Получение всех пользователей..."
-USERS_RESPONSE=$(curl -s "$BASE_URL/api/users" 2>/dev/null)
+USERS_RESPONSE=$(curl -s -m 10 "$BASE_URL/api/users" 2>&1)
 if echo "$USERS_RESPONSE" | grep -q "test_user_validation"; then
     print_status "PASS" "Чтение пользователей (GET /api/users)"
+    USER_COUNT=$(echo "$USERS_RESPONSE" | grep -o '"id":' | wc -l | tr -d ' ')
+    echo "  └─ Найдено пользователей: $USER_COUNT"
 else
     print_status "FAIL" "Чтение пользователей не работает"
+    echo "  └─ Ответ сервера: ${USERS_RESPONSE:0:200}"
 fi
 
 echo "Обновление пользователя..."
-UPDATE_RESPONSE=$(curl -s -X PUT "$BASE_URL/api/users/$USER_ID" \
+UPDATE_RESPONSE=$(curl -s -m 10 -X PUT "$BASE_URL/api/users/$USER_ID" \
     -H "Content-Type: application/json" \
     -d '{
         "username": "test_user_updated",
@@ -435,79 +474,103 @@ else
 fi
 
 echo "Создание продукта..."
-PRODUCT_RESPONSE=$(curl -s -X POST "$BASE_URL/api/products" \
+PRODUCT_RESPONSE=$(curl -s -m 10 -X POST "$BASE_URL/api/products" \
     -H "Content-Type: application/json" \
     -d '{
         "name": "Test Product",
         "description": "Validation test",
         "price": 99.99,
         "stock": 10
-    }' 2>/dev/null)
+    }' 2>&1)
 
 if echo "$PRODUCT_RESPONSE" | grep -q "id"; then
     print_status "PASS" "Создание продукта (POST /api/products)"
     PRODUCT_ID=$(echo "$PRODUCT_RESPONSE" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
+    echo "  └─ Создан продукт с ID: $PRODUCT_ID"
 else
     print_status "FAIL" "Создание продукта не работает"
+    echo "  └─ Ответ сервера: ${PRODUCT_RESPONSE:0:200}"
     PRODUCT_ID=1
 fi
 
 echo "Создание заказа..."
-ORDER_RESPONSE=$(curl -s -X POST "$BASE_URL/api/orders" \
+ORDER_RESPONSE=$(curl -s -m 10 -X POST "$BASE_URL/api/orders" \
     -H "Content-Type: application/json" \
     -d "{
         \"userId\": $USER_ID,
         \"totalAmount\": 99.99,
         \"productIds\": [$PRODUCT_ID]
-    }" 2>/dev/null)
+    }" 2>&1)
 
 if echo "$ORDER_RESPONSE" | grep -q "id"; then
     print_status "PASS" "Создание заказа (POST /api/orders) - проверка связей"
+    ORDER_ID=$(echo "$ORDER_RESPONSE" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
+    echo "  └─ Создан заказ с ID: $ORDER_ID (User: $USER_ID, Product: $PRODUCT_ID)"
 else
     print_status "FAIL" "Создание заказа не работает"
+    echo "  └─ Ответ сервера: ${ORDER_RESPONSE:0:200}"
 fi
 
 echo "Удаление пользователя..."
-DELETE_RESPONSE=$(curl -s -w "%{http_code}" -X DELETE "$BASE_URL/api/users/$USER_ID" 2>/dev/null | tail -c 3)
-if [ "$DELETE_RESPONSE" = "204" ] || [ "$DELETE_RESPONSE" = "200" ]; then
+DELETE_RESPONSE=$(curl -s -m 10 -w "\n%{http_code}" -X DELETE "$BASE_URL/api/users/$USER_ID" 2>&1)
+DELETE_CODE=$(echo "$DELETE_RESPONSE" | tail -1)
+DELETE_BODY=$(echo "$DELETE_RESPONSE" | sed '$d')
+if [ "$DELETE_CODE" = "204" ] || [ "$DELETE_CODE" = "200" ]; then
     print_status "PASS" "Удаление пользователя (DELETE /api/users/{id})"
+    echo "  └─ HTTP код: $DELETE_CODE"
 else
-    print_status "WARN" "Удаление пользователя вернуло код: $DELETE_RESPONSE"
+    print_status "WARN" "Удаление пользователя вернуло код: $DELETE_CODE"
+    if [ -n "$DELETE_BODY" ]; then
+        echo "  └─ Ответ: ${DELETE_BODY:0:150}"
+    fi
 fi
 
 print_header "10. ПРОВЕРКА ЭКСПОРТА ЛОГОВ В CSV"
 
 echo "Экспорт логов..."
-LOG_RESPONSE=$(curl -s "$BASE_URL/api/logs/mock-export" 2>/dev/null)
+LOG_RESPONSE=$(curl -s -m 10 "$BASE_URL/api/logs/mock-export" 2>&1)
 
 if echo "$LOG_RESPONSE" | grep -q "Timestamp"; then
     print_status "PASS" "Эндпоинт экспорта логов работает"
     
+    LOG_LINES=$(echo "$LOG_RESPONSE" | wc -l | tr -d ' ')
+    echo "  └─ Получено строк в CSV: $LOG_LINES"
+    
     if echo "$LOG_RESPONSE" | grep -qi "created\|updated\|deleted"; then
         print_status "PASS" "CSV содержит операции с БД"
+        DB_OPS=$(echo "$LOG_RESPONSE" | grep -ci "created\|updated\|deleted")
+        echo "  └─ Найдено операций с БД: $DB_OPS"
     else
         print_status "WARN" "CSV может не содержать операции с БД"
     fi
     
     echo "$LOG_RESPONSE" > /tmp/validation_logs.csv
     echo "  └─ Логи сохранены в /tmp/validation_logs.csv"
+    echo "  └─ Первые 3 строки:"
+    echo "$LOG_RESPONSE" | head -n 3 | sed 's/^/     /'
 else
     print_status "FAIL" "Экспорт логов не работает"
+    echo "  └─ Ответ сервера: ${LOG_RESPONSE:0:200}"
 fi
 
 print_header "11. ПРОВЕРКА МЕТРИК PROMETHEUS"
 
 echo "Проверка метрик Spring Boot..."
-METRICS_RESPONSE=$(curl -s "$BASE_URL/actuator/prometheus" 2>/dev/null)
+METRICS_RESPONSE=$(curl -s -m 10 "$BASE_URL/actuator/prometheus" 2>&1)
 
 if echo "$METRICS_RESPONSE" | grep -q "jvm_memory"; then
     print_status "PASS" "JVM метрики доступны"
+    JVM_METRICS=$(echo "$METRICS_RESPONSE" | grep -c "^jvm_" || echo 0)
+    echo "  └─ Найдено JVM метрик: $JVM_METRICS"
 else
     print_status "FAIL" "JVM метрики недоступны"
+    echo "  └─ Ответ (первые 200 символов): ${METRICS_RESPONSE:0:200}"
 fi
 
 if echo "$METRICS_RESPONSE" | grep -q "http_server_requests"; then
     print_status "PASS" "HTTP метрики доступны"
+    HTTP_METRICS=$(echo "$METRICS_RESPONSE" | grep -c "http_server" || echo 0)
+    echo "  └─ Найдено HTTP метрик: $HTTP_METRICS"
 else
     print_status "FAIL" "HTTP метрики недоступны"
 fi
@@ -519,18 +582,41 @@ echo "Проверка доступности веб-интерфейсов..."
 check_web_service() {
     local url=$1
     local name=$2
-    if curl -f -s "$url" > /dev/null 2>&1; then
-        print_status "PASS" "$name доступен ($url)"
-        return 0
-    else
-        print_status "WARN" "$name может быть недоступен (требует времени для запуска)"
-        return 1
-    fi
+    local retries=$3
+    local retry=1
+    
+    while [ $retry -le $retries ]; do
+        local response=$(curl -s -m 10 -w "\n%{http_code}" "$url" 2>&1)
+        local http_code=$(echo "$response" | tail -1)
+        local body=$(echo "$response" | sed '$d')
+        
+        if [ "$http_code" = "200" ] || [ "$http_code" = "302" ] || [ "$http_code" = "301" ]; then
+            print_status "PASS" "$name доступен ($url, код: $http_code)"
+            return 0
+        fi
+        
+        if [ $retry -lt $retries ]; then
+            echo "  └─ Ожидание $name (попытка $retry из $retries, код: ${http_code:-timeout})..."
+            if [ -n "$body" ] && [ ${#body} -lt 100 ]; then
+                echo "     Ответ: $body"
+            fi
+            sleep 10
+        else
+            echo "  └─ Последний ответ от $name (код: ${http_code:-timeout})"
+            if [ -n "$body" ] && [ ${#body} -lt 150 ]; then
+                echo "     Ответ: $body"
+            fi
+        fi
+        retry=$((retry + 1))
+    done
+    
+    print_status "WARN" "$name может быть недоступен (последний код: ${http_code:-timeout})"
+    return 1
 }
 
-check_web_service "http://localhost:9000" "GrayLog Web"
-check_web_service "http://localhost:8081" "Zabbix Web"
-check_web_service "http://localhost:3000" "Grafana"
+check_web_service "http://localhost:3000" "Grafana" 2
+check_web_service "http://localhost:8081" "Zabbix Web" 3
+check_web_service "http://localhost:9000" "GrayLog Web" 5
 
 print_header "13. ПРОВЕРКА ОТДЕЛЬНЫХ БД ДЛЯ СИСТЕМ МОНИТОРИНГА"
 

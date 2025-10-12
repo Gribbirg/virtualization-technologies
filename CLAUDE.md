@@ -20,3 +20,10 @@
 - Create shell scripts (.sh) for automated testing and verification of functionality
 - Scripts should handle environment setup, testing, and cleanup automatically
 - Include automated test scripts in README documentation
+
+## Report Naming Convention
+- Reports must be named using the following format: `ПВКСП_ОтчетN_ГрибковАС_ИКБО-16-22.[extension]`
+- Where N is the practical work number (1, 2, 3, etc.)
+- Extension should be: `.md` for Markdown source, `.docx` for Word document, `.pdf` for PDF export
+- Example: `ПВКСП_Отчет2_ГрибковАС_ИКБО-16-22.pdf`
+- Reports must be placed in `practical-work-N/report/` directory

@@ -1,6 +1,6 @@
 FROM gradle:8.14-jdk21 AS build
 
-LABEL maintainer="Александр Грибков <student@mirea.ru>"
+LABEL maintainer="Александр Грибков <gribkov.a.s@edu.mirea.ru>"
 LABEL version="1.0"
 LABEL description="Multi-stage Spring Boot application with PostgreSQL"
 

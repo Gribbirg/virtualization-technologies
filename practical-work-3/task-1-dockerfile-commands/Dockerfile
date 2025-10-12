@@ -1,6 +1,6 @@
 FROM node:18-slim
 
-LABEL maintainer="Student Name <student@example.com>"
+LABEL maintainer="Student Alexander Gribkov <gribkov.a.s@edu.mirea.ru>"
 LABEL version="1.0"
 LABEL description="Dockerfile demonstrating all Docker commands for Task 1"
 

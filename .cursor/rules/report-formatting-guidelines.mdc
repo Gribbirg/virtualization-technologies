@@ -14,7 +14,7 @@ This document contains the formatting standards for practical assignment reports
 - Avoid editorial commentary or personal interpretations
 
 ### 2. Report Location
-- Place final reports in `prN/report/` directory
+- Place final reports in `practical-work-N/report/` directory
 - Use consistent naming: `PRN_Summary.md` or similar
 - Export final versions to Word/PDF as required
 

@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gribkov-ikbo-16-22
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gribkov-ikbo-16-22
+  template:
+    metadata:
+      labels:
+        app: gribkov-ikbo-16-22
+    spec:
+      containers:
+      - name: gribkov-ikbo-16-22-container
+        image: gribkov-ikbo-16-22-obraz
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080

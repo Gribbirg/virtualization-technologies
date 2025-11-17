@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: frontend
+  name: frontend
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - image: gribkov/journal-server:v1
+        imagePullPolicy: Never
+        name: frontend
+        env:
+        - name: JOURNAL_ENTRIES
+          valueFrom:
+            configMapKeyRef:
+              name: frontend-config
+              key: journalEntries
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - name: passwd-volume
+          readOnly: true
+          mountPath: "/etc/redis-passwd"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+        - name: passwd-volume
+          secret:
+            secretName: redis-passwd

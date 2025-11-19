@@ -1,5 +1,21 @@
 # Practical Work 6 - Kubernetes Application Deployment
 
+## TL;DR - Quick Commands
+
+⚠️ **ВАЖНО:** Если возникают проблемы, читайте [IMPORTANT.md](IMPORTANT.md)
+
+```bash
+./setup-environment.sh    # Setup Colima & Minikube (first time only)
+./build-images.sh         # Build Docker images
+./test.sh                 # Deploy and test application
+```
+
+**Если что-то не работает:**
+```bash
+./setup-environment.sh    # Это исправит проблемы с окружением
+./test.sh                 # Повторите развертывание
+```
+
 ## Overview
 
 This practical work demonstrates the deployment of a distributed application in Kubernetes consisting of:
@@ -10,9 +26,29 @@ This practical work demonstrates the deployment of a distributed application in 
 
 ## Prerequisites
 
-- Kubernetes cluster (minikube, kind, or cloud provider)
-- kubectl configured
-- Docker (for building images)
+- Docker Desktop OR Colima (recommended for macOS)
+- Minikube
+- kubectl
+
+### Setup Environment (First Time)
+
+**Important:** Before starting, ensure Docker/Colima is properly configured:
+
+#### For macOS with Colima:
+
+```bash
+colima delete -f
+colima start --cpu 2 --memory 4 --disk 20
+```
+
+#### Start Minikube:
+
+```bash
+minikube delete
+minikube start --driver=docker --cpus=2 --memory=2048
+```
+
+**Note:** Use `--memory=2048` instead of higher values to avoid API server startup issues.
 
 ## Architecture
 
@@ -57,33 +93,49 @@ practical-work-6/
 └── test.sh                        # Automated test script
 ```
 
-## Build Instructions
+## Quick Start Guide
 
-### 1. Build Docker Images
+### 1. Setup Environment (REQUIRED - Run First!)
 
-You can use the automated build script:
+**Automated Setup (Recommended):**
+
+```bash
+./setup-environment.sh
+```
+
+This script will:
+- Check if Colima and Minikube are installed
+- Delete existing clusters
+- Start Colima with optimal settings
+- Start Minikube with correct memory allocation
+- Enable Ingress addon
+- Verify cluster is working
+
+**Manual Setup:**
+
+```bash
+colima delete -f
+colima start --cpu 2 --memory 4 --disk 20
+
+minikube delete
+minikube start --driver=docker --cpus=2 --memory=2048
+minikube addons enable ingress
+```
+
+### 2. Build Docker Images
 
 ```bash
 ./build-images.sh
 ```
 
-To build and push to Docker Hub:
+### 3. Load Images to Minikube
 
 ```bash
-PUSH_IMAGES=yes DOCKER_USERNAME=your-username ./build-images.sh
+minikube image load gribkov/static-files:v1
+minikube image load gribkov/journal-server:v1
 ```
 
-Or manually:
-
-```bash
-cd practical-work-6/app/fileserver
-docker build -t gribkov/static-files:v1 .
-docker push gribkov/static-files:v1
-```
-
-For frontend, you can build from the kbp-sample or use the automated script.
-
-### 2. Create Kubernetes Resources
+### 4. Create Kubernetes Resources
 
 #### Step 1: Create ConfigMap for frontend configuration
 
@@ -131,11 +183,7 @@ kubectl apply -f app/fileserver/fileserver-service.yml
 kubectl apply -f app/frontend/ingress.yaml
 ```
 
-### 3. Enable Ingress Controller (for Minikube)
-
-```bash
-minikube addons enable ingress
-```
+**Wait for Ingress Controller:** After enabling ingress addon, wait 1-2 minutes for the controller to be ready before accessing services.
 
 ## Verification
 
@@ -208,6 +256,39 @@ kubectl delete pvc -l app=redis
 ```
 
 ## Troubleshooting
+
+### Error: "failed to download openapi: EOF"
+
+This means the Kubernetes API server is not responding. Solution:
+
+```bash
+minikube delete
+colima restart
+minikube start --driver=docker --cpus=2 --memory=2048
+```
+
+**Important:** Use `--memory=2048` (not 3072 or 4096) to avoid API server startup issues on macOS.
+
+### Minikube API Server Not Starting
+
+If `minikube status` shows `apiserver: Stopped`:
+
+```bash
+minikube delete
+colima delete -f
+colima start --cpu 2 --memory 4 --disk 20
+minikube start --driver=docker --cpus=2 --memory=2048
+```
+
+### Docker/Colima Hanging
+
+If Docker commands are slow or timeout:
+
+```bash
+pkill -f colima
+colima delete -f
+colima start --cpu 2 --memory 4 --disk 20
+```
 
 ### Pods not starting
 

@@ -36,9 +36,26 @@ check_prerequisites() {
     success_msg "kubectl is installed"
 
     if ! kubectl cluster-info &> /dev/null; then
-        error_exit "Kubernetes cluster is not accessible"
+        error_exit "Kubernetes cluster is not accessible. Run: minikube start --driver=docker --cpus=2 --memory=2048"
     fi
     success_msg "Kubernetes cluster is accessible"
+
+    info_msg "Checking if API server is responsive..."
+    if ! kubectl get nodes &> /dev/null; then
+        error_exit "Kubernetes API server is not responding properly. Try: minikube delete && minikube start --driver=docker --cpus=2 --memory=2048"
+    fi
+    success_msg "API server is responsive"
+
+    info_msg "Checking Docker images in Minikube..."
+    if ! minikube image ls | grep -q "gribkov/static-files:v1"; then
+        info_msg "Loading static-files image to Minikube..."
+        minikube image load gribkov/static-files:v1 || info_msg "Image not found locally, will pull from registry"
+    fi
+    if ! minikube image ls | grep -q "gribkov/journal-server:v1"; then
+        info_msg "Loading journal-server image to Minikube..."
+        minikube image load gribkov/journal-server:v1 || info_msg "Image not found locally, will pull from registry"
+    fi
+    success_msg "Docker images checked"
 
     echo ""
 }

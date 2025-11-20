@@ -2,18 +2,19 @@
 
 ## TL;DR - Quick Commands
 
-⚠️ **ВАЖНО:** Если возникают проблемы, читайте [IMPORTANT.md](IMPORTANT.md)
+⚠️ **ВАЖНО:** Если возникают проблемы, читайте [docs/IMPORTANT.md](docs/IMPORTANT.md)
 
 ```bash
-./setup-environment.sh    # Setup Colima & Minikube (first time only)
-./build-images.sh         # Build Docker images
-./test.sh                 # Deploy and test application
+./scripts/setup-environment.sh    # Setup Colima & Minikube (first time only)
+./scripts/build-images.sh         # Build Docker images
+./scripts/test.sh                 # Deploy and test application
+./scripts/port-forward-all.sh     # Setup port forwarding for all services
 ```
 
 **Если что-то не работает:**
 ```bash
-./setup-environment.sh    # Это исправит проблемы с окружением
-./test.sh                 # Повторите развертывание
+./scripts/setup-environment.sh    # Это исправит проблемы с окружением
+./scripts/test.sh                 # Повторите развертывание
 ```
 
 ## Overview
@@ -311,9 +312,22 @@ kubectl exec -it redis-0 -- redis-cli -a $(kubectl get secret redis-passwd -o js
 
 ## Quick Start
 
-For a quick 5-minute setup, see [QUICK_START.md](QUICK_START.md)
+For a quick 5-minute setup, see [docs/QUICK_START.md](docs/QUICK_START.md)
 
-For a detailed demonstration guide for your teacher, see [DEMO_GUIDE.md](DEMO_GUIDE.md)
+For a detailed demonstration guide for your teacher, see [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md)
+
+## Port Forwarding
+
+To access services from your local machine:
+
+```bash
+./scripts/port-forward-all.sh
+```
+
+This will setup port forwarding for:
+- Frontend API (Journal Server): http://localhost:8083/api
+- File Server (Static files): http://localhost:8081/
+- Redis: localhost:6379
 
 ## Author
 

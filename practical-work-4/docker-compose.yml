@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: mirea_user
       POSTGRES_PASSWORD: mirea_password
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -17,7 +17,7 @@ services:
     image: adminer:4.8.1
     container_name: mirea-adminer
     ports:
-      - "8080:8080"
+      - "8085:8080"
     depends_on:
       - postgres
     networks:
@@ -121,7 +121,7 @@ services:
     environment:
       GRAYLOG_PASSWORD_SECRET: somepasswordpepper
       GRAYLOG_ROOT_PASSWORD_SHA2: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
-      GRAYLOG_HTTP_EXTERNAL_URI: http://127.0.0.1:9000/
+      GRAYLOG_HTTP_EXTERNAL_URI: http://127.0.0.1:9001/
       GRAYLOG_ELASTICSEARCH_HOSTS: http://elasticsearch:9200
       GRAYLOG_MONGODB_URI: mongodb://admin:password@mongodb:27017/graylog?authSource=admin
     entrypoint: /usr/bin/tini -- wait-for-it elasticsearch:9200 --  /docker-entrypoint.sh
@@ -129,7 +129,7 @@ services:
       - mongodb
       - elasticsearch
     ports:
-      - "9000:9000"
+      - "9001:9000"
       - "1514:1514"
       - "1514:1514/udp"
       - "12201:12201"
@@ -178,7 +178,7 @@ services:
       POSTGRES_USER: zabbix
       POSTGRES_PASSWORD: zabbix_password
     ports:
-      - "8081:8080"
+      - "8084:8080"
     depends_on:
       - zabbix-server
       - zabbix-postgres

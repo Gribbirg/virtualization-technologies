@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+  namespace: task-management
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jaeger
+  template:
+    metadata:
+      labels:
+        app: jaeger
+    spec:
+      containers:
+        - name: jaeger
+          image: jaegertracing/all-in-one:1.52
+          ports:
+            - containerPort: 5775
+              protocol: UDP
+            - containerPort: 6831
+              protocol: UDP
+            - containerPort: 6832
+              protocol: UDP
+            - containerPort: 5778
+            - containerPort: 16686
+            - containerPort: 14250
+            - containerPort: 14268
+            - containerPort: 14269
+            - containerPort: 9411
+          env:
+            - name: COLLECTOR_ZIPKIN_HOST_PORT
+              value: ":9411"
+            - name: COLLECTOR_OTLP_ENABLED
+              value: "true"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-collector
+  namespace: task-management
+spec:
+  selector:
+    app: jaeger
+  ports:
+    - name: zipkin
+      port: 9411
+      targetPort: 9411
+    - name: grpc
+      port: 14250
+      targetPort: 14250
+    - name: http
+      port: 14268
+      targetPort: 14268
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-query
+  namespace: task-management
+spec:
+  selector:
+    app: jaeger
+  ports:
+    - name: http
+      port: 16686
+      targetPort: 16686
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-agent
+  namespace: task-management
+spec:
+  selector:
+    app: jaeger
+  ports:
+    - name: thrift-compact
+      port: 6831
+      targetPort: 6831
+      protocol: UDP
+    - name: thrift-binary
+      port: 6832
+      targetPort: 6832
+      protocol: UDP
+    - name: config
+      port: 5778
+      targetPort: 5778

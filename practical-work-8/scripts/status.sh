@@ -51,10 +51,10 @@ echo "To view logs:"
 echo "  kubectl logs -n $NAMESPACE <pod-name> -f"
 echo ""
 echo "To access services:"
-echo "  ./port-forward.sh"
+echo "  ./scripts/port-forward.sh"
 echo ""
 echo "To test the system:"
-echo "  ./test-system.sh"
+echo "  ./scripts/test-system.sh"
 echo "=========================================="
 
 

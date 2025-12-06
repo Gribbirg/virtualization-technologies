@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 NAMESPACE="task-management"
 
 RED='\033[0;31m'
@@ -170,7 +171,7 @@ helm upgrade --install redis oci://registry-1.docker.io/bitnamicharts/redis \
 log_success "Redis installed"
 
 log_info "  - Installing Kafka..."
-kubectl apply -f $SCRIPT_DIR/infrastructure/kafka/kafka-deployment.yaml
+kubectl apply -f $PROJECT_DIR/infrastructure/kafka/kafka-deployment.yaml
 kubectl wait --for=condition=ready pod -l app=kafka -n $NAMESPACE --timeout=5m || log_warning "Kafka is still starting"
 log_success "Kafka installed"
 
@@ -241,13 +242,13 @@ helm upgrade --install mongodb oci://registry-1.docker.io/bitnamicharts/mongodb 
 log_success "MongoDB installed"
 
 log_info "  - Installing OpenSearch for Graylog..."
-kubectl apply -f "$SCRIPT_DIR/infrastructure/opensearch/deployment.yaml" || log_warning "OpenSearch installation had issues"
+kubectl apply -f "$PROJECT_DIR/infrastructure/opensearch/deployment.yaml" || log_warning "OpenSearch installation had issues"
 kubectl wait --for=condition=ready pod -l app=opensearch -n $NAMESPACE --timeout=5m 2>/dev/null || log_warning "OpenSearch is still starting"
 
 log_success "OpenSearch installed"
 
 log_info "  - Installing Graylog..."
-kubectl apply -f "$SCRIPT_DIR/infrastructure/graylog/deployment.yaml" || log_warning "Graylog installation had issues"
+kubectl apply -f "$PROJECT_DIR/infrastructure/graylog/deployment.yaml" || log_warning "Graylog installation had issues"
 log_info "    Waiting for Graylog (this may take a few minutes)..."
 kubectl wait --for=condition=ready pod -l app=graylog -n $NAMESPACE --timeout=10m 2>/dev/null || log_warning "Graylog is still starting"
 
@@ -256,12 +257,12 @@ log_success "Graylog installed"
 log_info "  - Installing KrakenD API Gateway..."
 # Create ConfigMap with krakend.json
 kubectl create configmap krakend-config \
-    --from-file=krakend.json="$SCRIPT_DIR/infrastructure/krakend/krakend.json" \
+    --from-file=krakend.json="$PROJECT_DIR/infrastructure/krakend/krakend.json" \
     --namespace=$NAMESPACE \
     --dry-run=client -o yaml | kubectl apply -f -
 
 # Deploy KrakenD
-kubectl apply -f "$SCRIPT_DIR/infrastructure/krakend/deployment.yaml"
+kubectl apply -f "$PROJECT_DIR/infrastructure/krakend/deployment.yaml"
 
 log_success "KrakenD installed"
 
@@ -269,27 +270,27 @@ log_success "All infrastructure components installed"
 
 log_info "Step 6/10: Building Docker images for microservices..."
 
-cd "$SCRIPT_DIR/auth-service"
+cd "$PROJECT_DIR/auth-service"
 log_info "  - Building auth-service..."
 docker build -t auth-service:latest .
 minikube image load auth-service:latest
 
-cd "$SCRIPT_DIR/task-service"
+cd "$PROJECT_DIR/task-service"
 log_info "  - Building task-service..."
 docker build -t task-service:latest .
 minikube image load task-service:latest
 
-cd "$SCRIPT_DIR/notification-service"
+cd "$PROJECT_DIR/notification-service"
 log_info "  - Building notification-service..."
 docker build -t notification-service:latest .
 minikube image load notification-service:latest
 
-cd "$SCRIPT_DIR/web-client"
+cd "$PROJECT_DIR/web-client"
 log_info "  - Building web-client..."
 docker build -t web-client:latest .
 minikube image load web-client:latest
 
-cd "$SCRIPT_DIR"
+cd "$PROJECT_DIR"
 log_success "All Docker images built and loaded"
 
 log_info "Step 7/10: Waiting for infrastructure to be ready..."
@@ -302,7 +303,7 @@ log_success "Infrastructure is ready"
 log_info "Step 8/10: Deploying microservices..."
 
 log_info "  - Deploying auth-service..."
-helm upgrade --install auth-service "$SCRIPT_DIR/auth-service/helm/auth-service" \
+helm upgrade --install auth-service "$PROJECT_DIR/auth-service/helm/auth-service" \
     --namespace $NAMESPACE \
     --set image.repository=auth-service \
     --set image.tag=latest \
@@ -323,7 +324,7 @@ helm upgrade --install auth-service "$SCRIPT_DIR/auth-service/helm/auth-service"
     --wait --timeout=5m || log_warning "auth-service deployment had issues, continuing..."
 
 log_info "  - Deploying task-service..."
-helm upgrade --install task-service "$SCRIPT_DIR/task-service/helm/task-service" \
+helm upgrade --install task-service "$PROJECT_DIR/task-service/helm/task-service" \
     --namespace $NAMESPACE \
     --set image.repository=task-service \
     --set image.tag=latest \
@@ -343,7 +344,7 @@ helm upgrade --install task-service "$SCRIPT_DIR/task-service/helm/task-service"
     --wait --timeout=5m || log_warning "task-service deployment had issues, continuing..."
 
 log_info "  - Deploying notification-service..."
-helm upgrade --install notification-service "$SCRIPT_DIR/notification-service/helm/notification-service" \
+helm upgrade --install notification-service "$PROJECT_DIR/notification-service/helm/notification-service" \
     --namespace $NAMESPACE \
     --set image.repository=notification-service \
     --set image.tag=latest \
@@ -363,7 +364,7 @@ helm upgrade --install notification-service "$SCRIPT_DIR/notification-service/he
     --wait --timeout=5m || log_warning "notification-service deployment had issues, continuing..."
 
 log_info "  - Deploying web-client..."
-helm upgrade --install web-client "$SCRIPT_DIR/web-client/helm/web-client" \
+helm upgrade --install web-client "$PROJECT_DIR/web-client/helm/web-client" \
     --namespace $NAMESPACE \
     --set image.repository=web-client \
     --set image.tag=latest \
@@ -443,7 +444,7 @@ echo ""
 echo "🚀 Next steps:"
 echo ""
 echo "1. Start port forwarding:"
-echo "   ./port-forward.sh"
+echo "   ./scripts/port-forward.sh"
 echo ""
 echo "2. Test the system:"
 echo "   # Register a user (через KrakenD)"

@@ -59,7 +59,7 @@ echo ""
 
 log_info "Checking if port forwarding is active..."
 if ! curl -s "$AUTH_URL/actuator/health" > /dev/null 2>&1; then
-    log_error "Services are not accessible. Please run ./port-forward.sh first"
+    log_error "Services are not accessible. Please run ./scripts/port-forward.sh first"
     exit 1
 fi
 log_success "Port forwarding is active"

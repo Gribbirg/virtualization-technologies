@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graylog
+  namespace: task-management
+  labels:
+    app: graylog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: graylog
+  template:
+    metadata:
+      labels:
+        app: graylog
+    spec:
+      initContainers:
+      - name: wait-for-opensearch
+        image: busybox
+        command: ['sh', '-c', 'until nc -z opensearch 9200; do echo waiting for opensearch; sleep 5; done;']
+      - name: wait-for-mongodb
+        image: busybox
+        command: ['sh', '-c', 'until nc -z mongodb 27017; do echo waiting for mongodb; sleep 5; done;']
+      containers:
+      - name: graylog
+        image: graylog/graylog:5.2
+        env:
+        - name: GRAYLOG_PASSWORD_SECRET
+          value: "somepasswordpeppersomepasswordpepper"
+        - name: GRAYLOG_ROOT_PASSWORD_SHA2
+          value: "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
+        - name: GRAYLOG_HTTP_EXTERNAL_URI
+          value: "http://localhost:9000/"
+        - name: GRAYLOG_HTTP_BIND_ADDRESS
+          value: "0.0.0.0:9000"
+        - name: GRAYLOG_ELASTICSEARCH_HOSTS
+          value: "http://opensearch:9200"
+        - name: GRAYLOG_MONGODB_URI
+          value: "mongodb://root:graylog_password@mongodb:27017/graylog?authSource=admin"
+        - name: GRAYLOG_MESSAGE_JOURNAL_ENABLED
+          value: "true"
+        - name: GRAYLOG_IS_LEADER
+          value: "true"
+        ports:
+        - containerPort: 9000
+          name: http
+        - containerPort: 12201
+          name: gelf-udp
+          protocol: UDP
+        - containerPort: 12201
+          name: gelf-tcp
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            cpu: 300m
+            memory: 1Gi
+        livenessProbe:
+          httpGet:
+            path: /api/system/lbstatus
+            port: 9000
+          initialDelaySeconds: 180
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /api/system/lbstatus
+            port: 9000
+          initialDelaySeconds: 90
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: graylog
+  namespace: task-management
+  labels:
+    app: graylog
+spec:
+  selector:
+    app: graylog
+  ports:
+  - name: http
+    port: 9000
+    targetPort: 9000
+  - name: gelf-udp
+    port: 12201
+    targetPort: 12201
+    protocol: UDP
+  - name: gelf-tcp
+    port: 12201
+    targetPort: 12201
+    protocol: TCP
+
+

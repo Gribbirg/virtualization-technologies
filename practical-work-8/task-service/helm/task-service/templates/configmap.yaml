@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-config
+  labels:
+    app: {{ .Chart.Name }}
+data:
+  db.host: {{ .Values.postgresql.host | quote }}
+  db.port: {{ .Values.postgresql.port | quote }}
+  db.name: {{ .Values.postgresql.database | quote }}
+  kafka.bootstrap.servers: {{ .Values.kafka.bootstrapServers | quote }}
+  auth.service.url: {{ .Values.authService.url | quote }}
+  graylog.host: {{ .Values.graylog.host | quote }}
+  graylog.port: {{ .Values.graylog.port | quote }}
+  jaeger.host: {{ .Values.jaeger.host | quote }}
+  jaeger.port: {{ .Values.jaeger.port | quote }}
+  zipkin.endpoint: {{ .Values.jaeger.zipkinEndpoint | quote }}
+

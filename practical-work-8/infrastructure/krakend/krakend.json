@@ -1,0 +1,215 @@
+{
+  "$schema": "https://www.krakend.io/schema/v2.5/krakend.json",
+  "version": 3,
+  "name": "Task Management API Gateway",
+  "timeout": "30000ms",
+  "cache_ttl": "0s",
+  "output_encoding": "json",
+  "extra_config": {
+    "router": {
+      "return_error_msg": true
+    },
+    "security/cors": {
+      "allow_origins": ["http://localhost:8084", "http://localhost:8085", "*"],
+      "allow_methods": ["GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+      "allow_headers": ["*"],
+      "expose_headers": ["*"],
+      "max_age": "12h",
+      "debug": true
+    }
+  },
+  "endpoints": [
+    {
+      "endpoint": "/auth/register",
+      "method": "POST",
+      "input_headers": ["Content-Type"],
+      "backend": [
+        {
+          "url_pattern": "/api/auth/register",
+          "host": ["http://auth-service.task-management.svc.cluster.local:8081"],
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/login",
+      "method": "POST",
+      "input_headers": ["Content-Type"],
+      "backend": [
+        {
+          "url_pattern": "/api/auth/login",
+          "host": ["http://auth-service.task-management.svc.cluster.local:8081"],
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/validate",
+      "method": "GET",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "url_pattern": "/api/auth/validate",
+          "host": ["http://auth-service.task-management.svc.cluster.local:8081"],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/me",
+      "method": "GET",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "url_pattern": "/api/auth/me",
+          "host": ["http://auth-service.task-management.svc.cluster.local:8081"],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/logout",
+      "method": "POST",
+      "input_headers": ["Authorization", "Content-Type"],
+      "backend": [
+        {
+          "url_pattern": "/api/auth/logout",
+          "host": ["http://auth-service.task-management.svc.cluster.local:8081"],
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "endpoint": "/tasks",
+      "method": "GET",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "url_pattern": "/api/tasks",
+          "host": ["http://task-service.task-management.svc.cluster.local:8082"],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/tasks",
+      "method": "POST",
+      "input_headers": ["Authorization", "Content-Type"],
+      "backend": [
+        {
+          "url_pattern": "/api/tasks",
+          "host": ["http://task-service.task-management.svc.cluster.local:8082"],
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "endpoint": "/tasks/{id}",
+      "method": "GET",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "url_pattern": "/api/tasks/{id}",
+          "host": ["http://task-service.task-management.svc.cluster.local:8082"],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/tasks/{id}",
+      "method": "PUT",
+      "input_headers": ["Authorization", "Content-Type"],
+      "backend": [
+        {
+          "url_pattern": "/api/tasks/{id}",
+          "host": ["http://task-service.task-management.svc.cluster.local:8082"],
+          "method": "PUT"
+        }
+      ]
+    },
+    {
+      "endpoint": "/tasks/{id}",
+      "method": "DELETE",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "url_pattern": "/api/tasks/{id}",
+          "host": ["http://task-service.task-management.svc.cluster.local:8082"],
+          "method": "DELETE"
+        }
+      ]
+    },
+    {
+      "endpoint": "/tasks/stats",
+      "method": "GET",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "url_pattern": "/api/tasks/stats",
+          "host": ["http://task-service.task-management.svc.cluster.local:8082"],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/notifications",
+      "method": "GET",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "url_pattern": "/api/notifications",
+          "host": ["http://notification-service.task-management.svc.cluster.local:8083"],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/notifications/{id}",
+      "method": "GET",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "url_pattern": "/api/notifications/{id}",
+          "host": ["http://notification-service.task-management.svc.cluster.local:8083"],
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "endpoint": "/notifications/{id}/read",
+      "method": "POST",
+      "input_headers": ["Authorization", "Content-Type"],
+      "backend": [
+        {
+          "url_pattern": "/api/notifications/{id}/read",
+          "host": ["http://notification-service.task-management.svc.cluster.local:8083"],
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "endpoint": "/notifications/read-all",
+      "method": "POST",
+      "input_headers": ["Authorization", "Content-Type"],
+      "backend": [
+        {
+          "url_pattern": "/api/notifications/read-all",
+          "host": ["http://notification-service.task-management.svc.cluster.local:8083"],
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "endpoint": "/notifications/unread-count",
+      "method": "GET",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "url_pattern": "/api/notifications/unread-count",
+          "host": ["http://notification-service.task-management.svc.cluster.local:8083"],
+          "method": "GET"
+        }
+      ]
+    }
+  ]
+}

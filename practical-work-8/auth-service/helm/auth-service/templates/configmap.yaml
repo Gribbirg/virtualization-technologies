@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-config
+data:
+  db.host: {{ .Values.env.dbHost | quote }}
+  db.port: {{ .Values.env.dbPort | quote }}
+  db.name: {{ .Values.env.dbName | quote }}
+  db.username: {{ .Values.env.dbUsername | quote }}
+  redis.host: {{ .Values.env.redisHost | quote }}
+  redis.port: {{ .Values.env.redisPort | quote }}
+  kafka.bootstrap.servers: {{ .Values.env.kafkaBootstrapServers | quote }}
+  graylog.host: {{ .Values.env.graylogHost | quote }}
+  graylog.port: {{ .Values.env.graylogPort | quote }}
+  jaeger.host: {{ .Values.env.jaegerHost | quote }}
+  jaeger.port: {{ .Values.env.jaegerPort | quote }}
+  zipkin.endpoint: {{ .Values.env.zipkinEndpoint | quote }}
+

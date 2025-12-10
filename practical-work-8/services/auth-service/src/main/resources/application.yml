@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: auth-service
+  
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:auth_db}
+    username: ${DB_USERNAME:auth_user}
+    password: ${DB_PASSWORD:auth_password}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+  
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+server:
+  port: 8081
+
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-change-in-production-please-use-strong-secret}
+  expiration: 86400000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,info
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_ENDPOINT:http://jaeger-collector:9411/api/v2/spans}
+
+graylog:
+  host: ${GRAYLOG_HOST:localhost}
+  port: ${GRAYLOG_PORT:12201}
+

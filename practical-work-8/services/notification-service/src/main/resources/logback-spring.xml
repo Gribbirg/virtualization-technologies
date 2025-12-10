@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    
+    <springProperty scope="context" name="applicationName" source="spring.application.name" defaultValue="notification-service"/>
+    <springProperty scope="context" name="graylogHost" source="graylog.host" defaultValue="localhost"/>
+    <springProperty scope="context" name="graylogPort" source="graylog.port" defaultValue="12201"/>
+    
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    
+    <appender name="GELF" class="biz.paluch.logging.gelf.logback.GelfLogbackAppender">
+        <host>udp:${graylogHost}</host>
+        <port>${graylogPort}</port>
+        <version>1.1</version>
+        <facility>${applicationName}</facility>
+        <extractStackTrace>true</extractStackTrace>
+        <filterStackTrace>true</filterStackTrace>
+        <mdcProfiling>true</mdcProfiling>
+        <timestampPattern>yyyy-MM-dd HH:mm:ss,SSS</timestampPattern>
+        <maximumMessageSize>8192</maximumMessageSize>
+        <additionalFields>application=${applicationName}</additionalFields>
+        <additionalField>environment=production</additionalField>
+        <includeFullMdc>true</includeFullMdc>
+    </appender>
+    
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="GELF"/>
+    </root>
+    
+    <logger name="com.taskmanagement.notification" level="INFO"/>
+    <logger name="org.springframework.kafka" level="INFO"/>
+</configuration>
+

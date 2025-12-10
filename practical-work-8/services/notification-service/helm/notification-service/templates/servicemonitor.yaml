@@ -1,0 +1,16 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Chart.Name }}-monitor
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: {{ .Values.serviceMonitor.interval | default "15s" }}
+{{- end }}

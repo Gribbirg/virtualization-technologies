@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.service.targetPort }}
+          name: http
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Chart.Name }}-config
+              key: db.host
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Chart.Name }}-config
+              key: db.port
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Chart.Name }}-config
+              key: db.name
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Chart.Name }}-secret
+              key: db.username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Chart.Name }}-secret
+              key: db.password
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Chart.Name }}-config
+              key: kafka.bootstrap.servers
+        - name: AUTH_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Chart.Name }}-config
+              key: auth.service.url
+        - name: GRAYLOG_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Chart.Name }}-config
+              key: graylog.host
+        - name: GRAYLOG_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Chart.Name }}-config
+              key: graylog.port
+        - name: JAEGER_AGENT_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Chart.Name }}-config
+              key: jaeger.host
+        - name: JAEGER_AGENT_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Chart.Name }}-config
+              key: jaeger.port
+        - name: ZIPKIN_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Chart.Name }}-config
+              key: zipkin.endpoint
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.probes.liveness.path }}
+            port: http
+          initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.probes.readiness.path }}
+            port: http
+          initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+        startupProbe:
+          httpGet:
+            path: {{ .Values.probes.startup.path }}
+            port: http
+          initialDelaySeconds: {{ .Values.probes.startup.initialDelaySeconds }}
+          periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+          failureThreshold: {{ .Values.probes.startup.failureThreshold }}
+        resources:
+          requests:
+            cpu: {{ .Values.resources.requests.cpu }}
+            memory: {{ .Values.resources.requests.memory }}
+          limits:
+            cpu: {{ .Values.resources.limits.cpu }}
+            memory: {{ .Values.resources.limits.memory }}
+

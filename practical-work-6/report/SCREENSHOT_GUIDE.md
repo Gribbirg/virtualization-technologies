@@ -370,20 +370,20 @@ curl -X POST http://localhost:8080/api \
 
 **Подготовка:**
 ```bash
-kubectl port-forward svc/fileserver 8081:80 &
+kubectl port-forward svc/fileserver 8086:80 &
 ```
 
 **Способ 1: Через curl**
 ```bash
-curl http://localhost:8081/
+curl http://localhost:8086/
 ```
 
 **Способ 2: Через браузер (рекомендуется для отчета)**
-- Открыть в браузере: `http://localhost:8081/`
+- Открыть в браузере: `http://localhost:8086/`
 
 **Что показать на скриншоте:**
 - HTML страницу с текстом "My Static App"
-- Адресная строка браузера с `http://localhost:8081/`
+- Адресная строка браузера с `http://localhost:8086/`
 
 ---
 
@@ -472,10 +472,10 @@ kubectl exec redis-0 -- sh -c 'redis-cli -a $(cat /etc/redis-passwd/passwd) INFO
 kubectl exec redis-1 -- sh -c 'redis-cli -a $(cat /etc/redis-passwd/passwd) INFO replication'
 
 # 7. Port-forward и тестирование API
-kubectl port-forward svc/frontend 8080:8080 &
-kubectl port-forward svc/fileserver 8081:80 &
+kubectl port-forward svc/frontend 8085:8080 &
+kubectl port-forward svc/fileserver 8086:80 &
 
-# Откройте браузер на http://localhost:8080/api и http://localhost:8081/
+# Откройте браузер на http://localhost:8085/api и http://localhost:8086/
 ```
 
 ---

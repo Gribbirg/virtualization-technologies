@@ -289,21 +289,21 @@ api server up and running.
 
 ```bash
 # Создать port-forward для доступа к Frontend (в фоновом режиме)
-kubectl port-forward svc/frontend 8080:8080 &
+kubectl port-forward svc/frontend 8085:8080 &
 
 # Проверить API endpoint (получить список записей)
-curl http://localhost:8080/api
+curl http://localhost:8085/api
 
 # Добавить запись в журнал
-curl -X POST http://localhost:8080/api -H "Content-Type: application/json" -d '{"text":"Test entry from demo"}'
+curl -X POST http://localhost:8085/api -H "Content-Type: application/json" -d '{"text":"Test entry from demo"}'
 
 # Получить обновленный список записей
-curl http://localhost:8080/api
+curl http://localhost:8085/api
 ```
 
 **Или открыть в браузере:**
 ```
-http://localhost:8080/api
+http://localhost:8085/api
 ```
 
 **Ожидаемый результат:**
@@ -322,15 +322,15 @@ http://localhost:8080/api
 
 ```bash
 # Создать port-forward для FileServer (в фоновом режиме)
-kubectl port-forward svc/fileserver 8081:80 &
+kubectl port-forward svc/fileserver 8086:80 &
 
 # Проверить через curl
-curl http://localhost:8081/
+curl http://localhost:8086/
 ```
 
 **В браузере открыть:**
 ```
-http://localhost:8081/
+http://localhost:8086/
 ```
 
 **Ожидаемый результат:**
@@ -477,14 +477,14 @@ kubectl get all,pvc,configmap,secret | grep -E "frontend|fileserver|redis"
 
 **Работоспособность Frontend:**
 7. ☐ `kubectl logs deployment/frontend` - логи показывают "api server up and running"
-8. ☐ `kubectl port-forward svc/frontend 8080:8080` + `curl http://localhost:8080/api/`
+8. ☐ `kubectl port-forward svc/frontend 8085:8080` + `curl http://localhost:8085/api/`
 9. ☐ Демонстрация в браузере
 10. ☐ POST запрос для добавления записи
 11. ☐ GET запрос показывает сохраненные данные
 
 **Работоспособность FileServer:**
 12. ☐ `kubectl logs deployment/fileserver` - NGINX запущен
-13. ☐ `kubectl port-forward svc/fileserver 8081:80` + открыть в браузере
+13. ☐ `kubectl port-forward svc/fileserver 8086:80` + открыть в браузере
 14. ☐ Страница "My Static App" отображается
 
 **Redis репликация:**

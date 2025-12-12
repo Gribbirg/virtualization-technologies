@@ -86,24 +86,24 @@ kubectl logs deployment/frontend --tail=20
 
 **Терминал 1:**
 ```bash
-kubectl port-forward svc/frontend 8080:8080
+kubectl port-forward svc/frontend 8085:8080
 ```
 
 **Терминал 2 (или браузер):**
 ```bash
-curl http://localhost:8080/api/
+curl http://localhost:8085/api/
 ```
 
-Или открыть в браузере: http://localhost:8080/api/
+Или открыть в браузере: http://localhost:8085/api/
 
 ### Тестировать FileServer
 
 **Остановить предыдущий port-forward (Ctrl+C), затем:**
 ```bash
-kubectl port-forward svc/fileserver 8081:80
+kubectl port-forward svc/fileserver 8086:80
 ```
 
-**Открыть в браузере:** http://localhost:8081/
+**Открыть в браузере:** http://localhost:8086/
 
 ---
 
@@ -151,14 +151,14 @@ kubectl logs deployment/frontend --tail=30
 
 kubectl logs deployment/fileserver --tail=20
 
-kubectl port-forward svc/frontend 8080:8080
+kubectl port-forward svc/frontend 8085:8080
 
-kubectl port-forward svc/fileserver 8081:80
+kubectl port-forward svc/fileserver 8086:80
 ```
 
 **Примечание:**
-- После команды `kubectl port-forward svc/frontend 8080:8080` открыть в браузере: http://localhost:8080/api/
-- После команды `kubectl port-forward svc/fileserver 8081:80` открыть в браузере: http://localhost:8081/
+- После команды `kubectl port-forward svc/frontend 8085:8080` открыть в браузере: http://localhost:8085/api/
+- После команды `kubectl port-forward svc/fileserver 8086:80` открыть в браузере: http://localhost:8086/
 
 ---
 

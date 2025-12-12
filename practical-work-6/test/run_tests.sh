@@ -27,12 +27,12 @@ echo "Author: Gribkov A.S. IKBO-16-22"
 echo "======================================"
 echo ""
 
-API_URL="http://localhost:8080/api"
-FILESERVER_URL="http://localhost:8081"
+API_URL="http://localhost:8085/api"
+FILESERVER_URL="http://localhost:8086"
 
 info_msg "Checking API availability..."
 if ! curl -s -f "$API_URL" > /dev/null 2>&1; then
-    error_exit "API is not accessible at $API_URL. Make sure port-forward is running: kubectl port-forward svc/frontend 8080:8080"
+    error_exit "API is not accessible at $API_URL. Make sure port-forward is running: kubectl port-forward svc/frontend 8085:8080"
 fi
 success_msg "API is accessible"
 echo ""
@@ -92,7 +92,7 @@ if curl -s -f "$FILESERVER_URL" > /dev/null 2>&1; then
     echo "Response: $RESPONSE"
     success_msg "Test 6 passed"
 else
-    error_exit "FileServer is not accessible at $FILESERVER_URL. Make sure port-forward is running: kubectl port-forward svc/fileserver 8081:80"
+    error_exit "FileServer is not accessible at $FILESERVER_URL. Make sure port-forward is running: kubectl port-forward svc/fileserver 8086:80"
 fi
 echo ""
 

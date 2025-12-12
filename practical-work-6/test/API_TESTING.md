@@ -226,7 +226,7 @@ curl -X POST http://127.0.0.1/api \
 ### 15. Получить главную страницу
 
 ```bash
-curl http://localhost:8081/
+curl http://localhost:8086/
 ```
 
 **Ожидаемый результат:**
@@ -320,14 +320,14 @@ for i in {1..5}; do
 done
 
 echo -e "\n=== Тест 3: Получение всех записей ==="
-curl -s http://localhost:8080/api | jq
+curl -s http://localhost:8085/api | jq
 
 echo -e "\n=== Тест 4: Количество записей ==="
-COUNT=$(curl -s http://localhost:8080/api | jq 'length')
+COUNT=$(curl -s http://localhost:8085/api | jq 'length')
 echo "Всего записей: $COUNT"
 
 echo -e "\n=== Тест 5: Проверка статического сервера ==="
-curl -s http://localhost:8081/
+curl -s http://localhost:8086/
 
 echo -e "\n\nТестирование завершено!"
 ```
@@ -350,8 +350,8 @@ chmod +x test/run_tests.sh
 
 2. **Port-forward не работает?** Убедитесь, что он запущен:
    ```bash
-   kubectl port-forward svc/frontend 8080:8080 &
-   kubectl port-forward svc/fileserver 8081:80 &
+   kubectl port-forward svc/frontend 8085:8080 &
+   kubectl port-forward svc/fileserver 8086:80 &
    ```
 
 3. **Ingress не отвечает?** Проверьте статус и запустите tunnel:

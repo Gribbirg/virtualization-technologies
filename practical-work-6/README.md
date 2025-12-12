@@ -325,8 +325,8 @@ To access services from your local machine:
 ```
 
 This will setup port forwarding for:
-- Frontend API (Journal Server): http://localhost:8083/api
-- File Server (Static files): http://localhost:8081/
+- Frontend API (Journal Server): http://localhost:8085/api
+- File Server (Static files): http://localhost:8086/
 - Redis: localhost:6379
 
 ## Author
